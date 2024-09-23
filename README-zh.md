@@ -86,13 +86,14 @@ Test set we construct in our paper
 
 你可以使用fasta文件作为序列的输入，pdb文件作为抗原的输入，示例文件位于examples文件夹中。
 
-#### 示例一：使用IgGM预测抗体结构和纳米体结构
+#### 示例一：使用IgGM预测抗体结构和纳米抗体结构
+* 如果PDB中有复合物的结构，该命令将自动生成表位信息，这种情况下可以删除（--epitope）。
 ```
 # antibody
-python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen examples/pdb.files.native/8iv5_A_B_G.pdb
+python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen examples/pdb.files.native/8iv5_A_B_G.pdb --epitope 126 127 129 145 146 147 148 149 150 155 156 157 158 160 161 162 163 164
 
 # nanobody
-python design.py --fasta examples/fasta.files.native/8q94_C_NA_A.fasta --antigen examples/pdb.files.native/8q94_C_NA_A.pdb
+python design.py --fasta examples/fasta.files.native/8q94_C_NA_A.fasta --antigen examples/pdb.files.native/8q94_C_NA_A.pdb --epitope 41 42 43 44 45 46 49 50 70 71 73 74
 ```
 ### IgGM-Ag
 
@@ -117,7 +118,8 @@ python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR
 
 可以指定其他区域进行设计；可以在示例文件夹中探索更多示例。
 
-#### 示例四: 使用 IgGM 设计针对给定抗原以及结合表位的条件下进行抗体和纳米抗体 CDR 区域序列，并预测整体结构，抗体会结合表位信息进行设计。
+#### 示例四: 无需提供复合物的结构信息，仅仅基于给定抗原和结合表位设计抗体和纳米体CDR环序列，预测整体结构。
+* **可以针对一个全新的表位进行抗体的设计**
 ```
 # antibody
 python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_All.fasta --antigen examples/pdb.files.native/8hpu_M_N_A.pdb --epitope 126 127 129 145 146 147 148 149 150 155 156 157 158 160 161 162 163 164
@@ -133,6 +135,12 @@ python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR
 如果你在研究中使用了IgGM, 请引用我们的工作
 
 ```BibTeX
-@article{
+@article{Wang2024IgGM,
+	author = {Wang, Rubo and Wu, Fandi and Gao, Xingyu and Wu, Jiaxiang and Zhao, Peilin and Yao, Jianhua},
+	title = {IgGM: A Generative Model for Functional Antibody and Nanobody Design},
+	elocation-id = {2024.09.19.613838},
+	year = {2024},
+	doi = {10.1101/2024.09.19.613838},
+	publisher = {Cold Spring Harbor Laboratory}
 }
 ```

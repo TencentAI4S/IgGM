@@ -4,7 +4,7 @@
 
 English | [简体中文](./README-zh.md)
 
-This package provides an implementation of IgGM inference, which can design.py the overall structure based on a given framework region sequence, as well as tools for CDR region sequences, and can design.py corresponding antibodies against specific epitopes.
+This package provides an implementation of IgGM inference, which can design the overall structure based on a given framework region sequence, as well as tools for CDR region sequences, and can design corresponding antibodies against specific epitopes.
 
 We also provide:
 
@@ -82,19 +82,20 @@ This folder contains files related to the dataset.
   - **fasta.files.design**: Contains the masked CDR area fasta file, where X represents mask.
 ## Quick Start
 
-You can use a fasta file (--fasta) and antigen's pdb file(--pdb).
+You can use a fasta file (--fasta) and antigen's pdb file(--pdb). The epitope information can be provided by specifying the residue numbers in the antigen pdb file.
 
 
-#### Example 1: predicting the structure of an antibody & nanobody using IgGM
+#### Example 1: predicting the structure of an antibody & nanobody against a given antigen and binding epitopes using IgGM 
+* If a complex structure is available in the PDB, the command will automatically generate epitope information. You can delete the epitope information from the command(--epitope) if needed.
 ```
 # antibody
-python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen examples/pdb.files.native/8iv5_A_B_G.pdb
+python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen examples/pdb.files.native/8iv5_A_B_G.pdb --epitope 126 127 129 145 146 147 148 149 150 155 156 157 158 160 161 162 163 164
 
 # nanobody
-python design.py --fasta examples/fasta.files.native/8q94_C_NA_A.fasta --antigen examples/pdb.files.native/8q94_C_NA_A.pdb
+python design.py --fasta examples/fasta.files.native/8q94_C_NA_A.fasta --antigen examples/pdb.files.native/8q94_C_NA_A.pdb --epitope 41 42 43 44 45 46 49 50 70 71 73 74
 ```
 
-#### Example 2: design.py the sequence of an antibody & nanobody CDR H3 loops against a given antigen using IgGM, and predict the overall structure.
+#### Example 2: redesign the sequence of an antibody & nanobody CDR H3 loops against a given antigen using IgGM, and predict the overall structure.
 ```
 # antibody
 python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_H3.fasta --antigen examples/pdb.files.native/8hpu_M_N_A.pdb
@@ -103,7 +104,7 @@ python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_H
 python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR_3.fasta --antigen examples/pdb.files.native/8q95_B_NA_A.pdb
 ```
 
-#### Example 3:  design.py the sequence of an antibody & nanobody CDR loops against a given antigen using IgGM, and predict the overall structure.
+#### Example 3:  design the sequence of an antibody & nanobody CDR loops against a given antigen using IgGM, and predict the overall structure.
 ```
 # antibody
 python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_All.fasta --antigen examples/pdb.files.native/8hpu_M_N_A.pdb
@@ -114,7 +115,9 @@ python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR
 
 You can specify other regions for design; more examples can be explored in the examples folder.
 
-#### Example 4: IgGM design.py is used to sequence the CDR regions of antibodies and nano-antibodies under the conditions of given antigens and binding epitopes, and predict the overall structure. Antibodies will be designed with epitope information.
+#### Example 4: Design the sequences of antibody and nanobody CDR loops based on given antigens and binding epitopes, without the need to provide complex structural information, and predict the overall structure.
+
+* **It is possible to design antibodies targeting a new epitope.**
 ```
 # antibody
 python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_All.fasta --antigen examples/pdb.files.native/8hpu_M_N_A.pdb --epitope 126 127 129 145 146 147 148 149 150 155 156 157 158 160 161 162 163 164
@@ -122,7 +125,7 @@ python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_A
 # nanobody
 python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR_All.fasta --antigen examples/pdb.files.native/8q95_B_NA_A.pdb --epitope 41 42 43 44 45 46 49 50 70 71 73 74
 ```
-For a completely new antigen, you can specify epitopes to design.py antibodies that can bind to those epitopes.
+For a completely new antigen, you can specify epitopes to design antibodies that can bind to those epitopes.
 
 
 
@@ -131,7 +134,13 @@ For a completely new antigen, you can specify epitopes to design.py antibodies t
 If you use IgGM in your research, please cite our paper
 
 ```BibTeX
-@article{
+@article{Wang2024IgGM,
+	author = {Wang, Rubo and Wu, Fandi and Gao, Xingyu and Wu, Jiaxiang and Zhao, Peilin and Yao, Jianhua},
+	title = {IgGM: A Generative Model for Functional Antibody and Nanobody Design},
+	elocation-id = {2024.09.19.613838},
+	year = {2024},
+	doi = {10.1101/2024.09.19.613838},
+	publisher = {Cold Spring Harbor Laboratory}
 }
 ```
 

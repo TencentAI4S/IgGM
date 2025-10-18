@@ -12,7 +12,7 @@ from .pdb_fixer import PdbFixer
 def cal_ppi(pdb_path, complex_ids):
     """Calculate PPI sites"""
     prot_data = {}
-    if len(complex_ids) == 2:
+    if len(complex_ids) == 3:
         ligand_id = complex_ids[0] + complex_ids[1]
     else:
         ligand_id = complex_ids[0]

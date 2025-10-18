@@ -51,7 +51,7 @@ def parse_args():
     parser.add_argument(
         '--temperature', '-t',
         type=float,
-        default=0.1,
+        default=1,
         help='temperature for sampling',
     )
     parser.add_argument(
@@ -101,7 +101,7 @@ def predict(args):
     if args.cal_epitope:
         epitope = cal_ppi(pdb_path, ids)
         epitope = torch.nonzero(epitope).flatten().tolist()
-        print(f"epitope: {' '.join(str(i) for i in epitope)}")
+        print(f"epitope: {' '.join(str(i + 1) for i in epitope)}")
         return
     name = basename.split(".")[0]
     output = f"{args.output}/{name}.pdb"
@@ -115,7 +115,7 @@ def predict(args):
     else:
         epitope = torch.zeros(len(aa_seq))
         for i in args.epitope:
-            epitope[i] = 1
+            epitope[i - 1] = 1
 
     if len(aa_seq) > args.max_antigen_size:
         aa_seq, atom_cord, atom_cmsk, epitope, _ = crop_sequence_with_epitope(

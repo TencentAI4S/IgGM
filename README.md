@@ -98,7 +98,7 @@ python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen 
 
 '--antigen' represents the structure of a known complex, and '--fasta' represents the sequence of a known complex, which will return the epitope format required later, and after copying, the fasta can be replaced with the sequence you need to design. 
 
-The generated epitope format is: 126 127 129 145 146 147 148 149 150 155 156 
+The generated epitope format is (The serial number starts at 1): 7 8 9 10 11 12 13 14 108 109 110 111 112 113 114 115 116 118 167 
 
 If you specify epitope according to the sequence, make sure that the order of the sequence is consistent with the order in the PDB file, and mark the serial number of the corresponding position.
 ```
@@ -107,20 +107,20 @@ If you specify epitope according to the sequence, make sure that the order of th
 * If the PDB contains the structure of the complex, this command will automatically generate epitope information. In this case, you can remove `--epitope`.
 ```
 # antibody
-python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen examples/pdb.files.native/8iv5_A_B_G.pdb --epitope 126 127 129 145 146 147 148 149 150 155 156 157 158 160 161 162 163 164
+python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen examples/pdb.files.native/8iv5_A_B_G.pdb --epitope 7 8 9 10 11 12 13 14 108 109 110 111 112 113 114 115 116 118 167 157 158 160 161 162 163 164
 
 # nanobody
-python design.py --fasta examples/fasta.files.native/8q94_C_NA_A.fasta --antigen examples/pdb.files.native/8q94_C_NA_A.pdb --epitope 41 42 43 44 45 46 49 50 70 71 73 74
+python design.py --fasta examples/fasta.files.native/8q94_C_NA_A.fasta --antigen examples/pdb.files.native/8q94_C_NA_A.pdb --epitope 109 110 111 112 113 114 115 116 117 120 121 140 141 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 165 166 167
 ```
 
 #### Example 2: Given the structure of a complex, use IgGM to design the corresponding sequence
 * If the PDB contains the structure of the complex, this command will automatically generate epitope information. In this case, you can remove `--epitope`.
 ```
 # antibody
-python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_H3.fasta --antigen examples/pdb.files.native/8hpu_M_N_A.pdb --epitope 126 127 129 145 146 147 148 149 150 155 156 157 158 160 161 162 163 164 --run_task inverse_design
+python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_H3.fasta --antigen examples/pdb.files.native/8hpu_M_N_A.pdb --epitope 7 8 9 10 11 12 13 14 108 109 110 111 112 113 114 115 116 118 167 157 158 160 161 162 163 164 --run_task inverse_design
 
 # nanobody
-python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR_H3.fasta --antigen examples/pdb.files.native/8q95_B_NA_A.pdb --epitope 41 42 43 44 45 46 49 50 70 71 73 74 --run_task inverse_design
+python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR_H3.fasta --antigen examples/pdb.files.native/8q95_B_NA_A.pdb --epitope 109 110 111 112 113 114 115 116 117 120 121 140 141 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 165 166 167 --run_task inverse_design
 ```
 
 #### Example 3: Using IgGM for framework region sequence redesign
@@ -211,10 +211,10 @@ You can specify other regions for design; explore more examples in the examples 
 * **It is possible to design an antibody for a completely new epitope.**
 ```
 # antibody
-python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_All.fasta --antigen examples/pdb.files.native/8hpu_M_N_A.pdb --epitope 126 127 129 145 146 147 148 149 150 155 156 157 158 160 161 162 163 164
+python design.py --fasta examples/fasta.files.design/8hpu_M_N_A/8hpu_M_N_A_CDR_All.fasta --antigen examples/pdb.files.native/8hpu_M_N_A.pdb --epitope 7 8 9 10 11 12 13 14 108 109 110 111 112 113 114 115 116 118 167 157 158 160 161 162 163 164
 
 # nanobody
-python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR_All.fasta --antigen examples/pdb.files.native/8q95_B_NA_A.pdb --epitope 41 42 43 44 45 46 49 50 70 71 73 74
+python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR_All.fasta --antigen examples/pdb.files.native/8q95_B_NA_A.pdb --epitope 109 110 111 112 113 114 115 116 117 120 121 140 141 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 165 166 167
 ```
 For a completely new antigen, you can specify epitopes to design antibodies that can bind to them.
 

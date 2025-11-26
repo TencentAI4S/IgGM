@@ -14,7 +14,7 @@ def gen_contact(chn_data_pri, chn_data_sec, inter_chain_contact, dist_thres=10):
 
     cord_mat_sec = ProtStruct.get_atoms(chn_data_sec['seq'], chn_data_sec['cord'], ['CA'])
     cmsk_vec_sec = ProtStruct.get_cmsk_vld(chn_data_sec['seq'], cord_mat_sec.device)
-    cmsk_vec_sec = ProtStruct.get_atoms(chn_data_pri['seq'], cmsk_vec_sec, ['CA'])
+    cmsk_vec_sec = ProtStruct.get_atoms(chn_data_sec['seq'], cmsk_vec_sec, ['CA'])
 
     len_pri = len(chn_data_pri['seq'])
 

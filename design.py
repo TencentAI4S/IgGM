@@ -99,17 +99,17 @@ def predict(args):
     chains = [{"sequence": seq, "id": seq_id} for seq, seq_id in zip(sequences, ids) if seq_id != ids[-1]]
     _, basename = os.path.split(fasta_path)
     if args.cal_epitope:
-        epitope = cal_ppi(pdb_path, ids)
+        epitope = cal_ppi(pdb_path, ids, sequences)
         epitope = torch.nonzero(epitope).flatten().tolist()
         print(f"epitope: {' '.join(str(i + 1) for i in epitope)}")
         return
     name = basename.split(".")[0]
     output = f"{args.output}/{name}.pdb"
 
-    aa_seq, atom_cord, atom_cmsk, _, _ = PdbParser.load(pdb_path, chain_id=ids[-1])
+    aa_seq, atom_cord, atom_cmsk, _, _ = PdbParser.load(pdb_path, chain_id=ids[-1], aa_seq=sequences[-1])
     if args.epitope is None:
         try:
-            epitope = cal_ppi(pdb_path, ids)
+            epitope = cal_ppi(pdb_path, ids, sequences)
         except:
             epitope = args.epitope
     else:

@@ -9,7 +9,7 @@ from .prot_converter import ProtConverter
 from .pdb_fixer import PdbFixer
 
 
-def cal_ppi(pdb_path, complex_ids):
+def cal_ppi(pdb_path, complex_ids, sequences):
     """Calculate PPI sites"""
     prot_data = {}
     if len(complex_ids) == 3:
@@ -30,7 +30,7 @@ def cal_ppi(pdb_path, complex_ids):
 
     prot_data[ligand_id] = {"seq": aa_seqs, "cord": torch.cat(atom_cords, dim=0), "cmsk": torch.cat(atom_cmsks, dim=0)}
 
-    aa_seq, atom_cord, atom_cmsk, _, _ = PdbParser.load(pdb_path, chain_id=receptor_id)
+    aa_seq, atom_cord, atom_cmsk, _, _ = PdbParser.load(pdb_path, chain_id=receptor_id, aa_seq=sequences[-1])
     prot_data[receptor_id] = {"seq": aa_seq, "cord": atom_cord, "cmsk": atom_cmsk}
     ppi_data = calc_ppi_sites(prot_data, [receptor_id, ligand_id])
     return ppi_data[receptor_id]

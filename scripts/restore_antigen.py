@@ -26,7 +26,7 @@ def get_chain_data(structure, chain_id):
     """Extract CA atoms and Sequence for a chain."""
     atoms = []
     seq = ""
-    # simple 3->1
+    # Map 3-letter codes to 1-letter codes
     aa_map = {'ALA':'A','CYS':'C','ASP':'D','GLU':'E','PHE':'F','GLY':'G','HIS':'H','ILE':'I','LYS':'K','LEU':'L','MET':'M','ASN':'N','PRO':'P','GLN':'Q','ARG':'R','SER':'S','THR':'T','VAL':'V','TRP':'W','TYR':'Y'}
     
     for model in structure:
@@ -51,27 +51,12 @@ def get_all_ca_atoms(structure, chain_ids=None):
 
 def align_subsequence(query_atoms, query_seq, target_atoms, target_seq):
     """
-    Find best alignment of query within target and return paired atoms.
-    Assumes query is a subset of target (gaps in target not allowed in matching region, but gaps in query ok if trimmed discontinuous?)
-    Actually trim_antigen produces discontinuous segments? 
-    It produces "epitope + 5 neighbors". This might be disjoint.
-    So we align sequences allowing gaps in TARGET to skip over non-trimmed regions.
-    GAP_OPEN = -10, GAP_EXTEND = -0.5
+    Find best local alignment of query within target and return paired atoms.
+    
+    This handles potential gaps or discontinuous segments (e.g., radius-trimmed antigens).
+    Uses Biopython's pairwise2 local alignment (match=+5, mismatch=-5, gap_open=-10, gap_extend=-0.5).
     """
-    # Force query to match fully (no gaps in query) if possible? No, query is just residues.
-    # We want local alignment.
-    
-    # alignments = pairwise2.align.localds(target_seq, query_seq, 5, -5, -10, -0.5) 
-    # Use simple exact matching logic if sequences are identical subset.
-    # Because design process shouldn't mutate antigen sequence (usually).
-    
-    # Let's try explicit mapping by exact residues.
-    # Query must be a subsequence of Target.
-    
-    # Since alignment is potentially discontinuous, simplistic "find substring" fails.
-    # Biopython pairwise2 is good.
-    # Maximize matches.
-    # Match +5, Mismatch -5, Gap -10.
+    # Perform local alignment to identifying matching subsequences using a robust scoring scheme.
     
     alignments = pairwise2.align.globalms(target_seq, query_seq, 5, -5, -10, -0.5)
     best = alignments[0]
@@ -134,9 +119,8 @@ def main():
     d_atoms, d_seq = get_chain_data(design_st, args.antigen_chain)
     print(f"Designed Antigen (Chain {args.antigen_chain}): {len(d_atoms)} atoms, {len(d_seq)} residues")
     
-    # Get atoms/seq for full antigen in Merged
-    # Assuming merged antigen is also 'A'? Usually merge_chains makes it 'A'.
-    # If merged was multi-chain, trim_antigen usually takes 'A'.
+    # Get atoms/seq for full antigen in Merged structure.
+    # The merged antigen is typically assigned chain 'A' during the preprocessing step.
     m_atoms, m_seq = get_chain_data(merged_st, args.antigen_chain)
     print(f"Merged Antigen (Chain {args.antigen_chain}): {len(m_atoms)} atoms, {len(m_seq)} residues")
     
@@ -160,13 +144,8 @@ def main():
     # === Step 2: Align Merged -> Original ===
     print("\n--- Alignment 2: Merged -> Original ---")
     
-    # We need to map Merged chain 'A' to Original chains (restore_ids)
-    # Merged 'A' is usually concatenation of Original chains.
-    # We can align Merged 'A' (which is now our reference for Design) to Original chains combined.
-    
-    # Actually, simpler:
-    # Use the same matching logic. Merged sequence ~ Concatenation of Original Sequences.
-    # Or just align common subset.
+    # Map residues from the Merged antigen (referenced as Chain A) to the Original multi-chain structure.
+    # Since the Merged sequence is a concatenation of the Original sequences, we align them to establish the coordinate transform.
     
     orig_chain_ids = args.restore_ids.split('_')
     print(f"Original chains: {orig_chain_ids}")
@@ -180,16 +159,8 @@ def main():
         
     print(f"Original Antigen (Chains {args.restore_ids}): {len(o_atoms)} atoms")
     
-    # Align Merged (Moving) -> Original (Fixed)
-    # Wait, Merged is our current frame (where Ab is now). 
-    # We need to move Merged frame to Original frame.
-    # So T2: Merged -> Original.
-    
-    # Pairs between Merged and Original
-    # Merged should be identical to Original (just merged chains).
-    # Sequences should match.
-    # Let's align m_seq (subset of original? or original is subset?)
-    # Usually merged = original.
+    # Align Merged (Moving) -> Original (Fixed) to calculate Transformation T2.
+    # This transforms coordinates from the Merged frame to the Original PDB frame.
     
     pairs_m2, pairs_o = align_subsequence(m_atoms, m_seq, o_atoms, o_seq)
     print(f"Matched {len(pairs_m2)} residues between Merged and Original")
@@ -222,9 +193,8 @@ def main():
         def accept_chain(self, chain):
             return True
             
-    # HACK: construct a temporary structure for output
-    # Since we can't easily merge structures with Bio.PDB (parent pointers),
-    # we copy chains to a new Model/Structure
+    # Construct a new Structure object for the final output.
+    # This approach avoids issues with modifying existing Structure/Model parent pointers in Biopython.
     from Bio.PDB.Structure import Structure
     from Bio.PDB.Model import Model
     

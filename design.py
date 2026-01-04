@@ -283,15 +283,9 @@ def main():
                                 print(f"[Restore] Running OpenMM Relax on {restored_pdb}...")
                                 OpenMM_relax(restored_pdb)
                                 
-                                # OpenMM renames chains (A, B, C...). Restore original IDs from pre-relaxed file.
-                                # The pre-relaxed file is 'restored_pdb' before overwrite, but we overwrote it.
-                                # However, we know the chains we INTENDED: args.restore_IDs split + H + L.
-                                # Actually, easier: Read the PDB *before* relax? No, it's overwritten.
-                                # Better: OpenMM_relax could take a map? 
-                                # Best: Just renumb/rename based on the known order.
-                                # Verify order: Original Chains (A, B, C...) then Antibody (H, L).
-                                # OpenMM output: A, B, C, D, E.
-                                # Mapping: A->A, B->B, C->C, D->H, E->L.
+                                # OpenMM/PDBFixer often renames chains (A, B, C...). 
+                                # We restore the original chain IDs (Antigen chains + H + L) based on the known input order.
+                                # Assumes OpenMM preserves the order of chains.
                                 
                                 print(f"[Restore] Restoring chain IDs after OpenMM relaxation...")
                                 restored_ids = args.restore_IDs.split('_') # e.g. ['A', 'B', 'C']
@@ -316,7 +310,7 @@ def main():
                                     io.save(restored_pdb)
                                     print(f"[Restore] Chain IDs restored in {restored_pdb}")
                                 else:
-                                    print(f"      ⚠️ Warning: Chain count mismatch (Found {len(chains)}, Expected {len(expected_order)}). Skipping rename.")
+                                    print(f"      [WARNING] Chain count mismatch (Found {len(chains)}, Expected {len(expected_order)}). Skipping rename.")
                                     
                             except Exception as e:
                                 print(f"[Restore] OpenMM Relax/Rename failed: {e}")

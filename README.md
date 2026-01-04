@@ -14,7 +14,7 @@
 
 
 --------------------------------------------------------------------------------
-English | [简体中文](./README-zh.md)
+English | [简体中文](./README-zh.md) | [Español](./README-es.md) | [Português](./README-pt.md)
 ## 🔊News
 
 * **2025-08-22**: We just learned that our use of IgGM in the antibody design competition ([AIntibody: an experimentally validated in silico antibody discovery design challenge](https://www.nature.com/articles/s41587-024-02469-9)) has won us a top-three prize! 🎉

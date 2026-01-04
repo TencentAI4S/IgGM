@@ -234,9 +234,27 @@ python scripts/merge_chains.py --antigen examples/pdb.files.native/8ucd.pdb --ou
 * **重要!!** 必须先计算表位 (请参考 [表位计算](#表位计算))。如果有多个抗原链，请先合并（示例八）。
 * 抗体链 (H/L) 保持不变；只有指定的抗原链被修剪。
 ```bash
-python scripts/trim_antigen.py --pdb outputs/8ucd_merge.pdb --fasta outputs/8ucd_merge.fasta --output outputs/8ucd_merge_trimmed.pdb --antigen-chain A --epitope 198 199 200 201 202 203 204 550 553 554 555 902 904 905 906 907 908 909 910 911
+python scripts/trim_antigen.py --pdb outputs/8ucd_merge.pdb --fasta outputs/8ucd_merge.fasta --output outputs/8ucd_merge_trimmed.pdb --antigen-chain A --epitope 198 199 200 201 202 203 204 --keep-radius 10.0
 ```
-该工具仅保留表位残基及其两侧各5个残基，输出修剪后的 PDB 和 FASTA 文件，并打印用于设计的重新编号表位索引。
+* **--keep-radius**: (默认 10.0Å) 包含表位质心 X 埃范围内的残基，确保即使残基在序列中不连续也能保留结构上下文。设为 0 以禁用。
+* 该工具输出修剪后的 PDB 和 FASTA 文件，并打印用于设计的重新编号表位索引。
+
+#### 示例十: 使用修剪后的抗原进行推理并恢复为原始状态。
+* 这是针对大抗原的推荐工作流程：针对修剪后的片段进行设计，然后自动恢复完整的抗原上下文并对最终复合物进行弛豫。
+```bash
+python design.py \
+    --fasta outputs/8ucd_merge_trimmed.fasta \
+    --antigen outputs/8ucd_merge_trimmed_noAb.pdb \
+    --epitope 6 7 8 9 ... (indices from trim output) \
+    --restore_merged outputs/8ucd_merge.pdb \
+    --restore_unmerged examples/pdb.files.native/8ucd.pdb \
+    --restore_IDs A_B_C \
+    --relax_open
+```
+* **--restore_merged**: 用于修剪的 PDB (提供参考坐标系)。
+* **--restore_unmerged**: 原始完整 PDB (提供最终输出的确切链)。
+* **--restore_IDs**: 原始 PDB 中需要包含在最终输出中的链 ID。
+* **--relax_open**: 在恢复*后*执行 OpenMM 弛豫，确保抗体-抗原界面在完整抗原的上下文中进行能量最小化。
 
 # 🤝🏻License
 

@@ -21,7 +21,7 @@ def Rosetta_relax(pdb_file):
         from pyrosetta.rosetta.protocols.minimization_packing import PackRotamersMover
         from pyrosetta.rosetta.protocols.relax import FastRelax
     except ImportError:
-        print("❌ PyRosetta not found. Please install via `pip install pyrosetta-installer` and setup, or use --relax_open for OpenMM.")
+        print("[ERROR] PyRosetta not found. Please install via `pip install pyrosetta-installer` and setup, or use --relax_open for OpenMM.")
         return
 
     print(f'Rosetta processing {pdb_file} for Relax')

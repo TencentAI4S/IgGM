@@ -62,6 +62,7 @@ pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -
 ```shell
 pip install https://west.rosettacommons.org/pyrosetta/release/release/PyRosetta4.Release.python310.ubuntu.wheel/pyrosetta-2025.37+release.df75a9c48e-cp310-cp310-linux_x86_64.whl
 ```
+或者，您可以使用 OpenMM 进行弛豫（Relaxation），它包含在 environment.yaml 中。使用 `--relax_open` 参数。
 
 3. 下载模型(可选，当运行代码时，预训练权重将自动下载)
     * [Zenodo](https://zenodo.org/records/16909543)
@@ -81,6 +82,7 @@ pip install https://west.rosettacommons.org/pyrosetta/release/release/PyRosetta4
 
 * **可选：**
   * 所有命令您可以使用Pyrosetta通过添加"--relax"或"-r" 来relax输出。执行这个命令同时会添加侧链原子。
+  * 或者，使用 `--relax_open` 或 `-r_open` 使用 OpenMM 进行结构弛豫（不需要 PyRosetta 许可）。
   * 所有命令您可以通过添加"--max_antigen_size 384"或''-mas 384''来指定抗原的最大截断长度为384，以避免内存避免内存。
 
 为了方便后续处理，你需要准备一个fasta文件和一个pdb文件，你的fasta文件应该具有以下的结构，具体可以参考examples文件夹。
@@ -95,6 +97,7 @@ NLCPFDEVFNATRFASVYAWNRKRISNCVADYSVLYNFAPFFAFKCYGVSPTKLNDLCFTNVYADSFVIRGNEVSQIAPG
 ```
 * 'X'表示需要设计的区域
 * 如果需要获得抗原的表位，可以使用以下命令
+<a id="表位计算"></a>
 
 ```
 python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen examples/pdb.files.native/8iv5_A_B_G.pdb --cal_epitope
@@ -226,6 +229,14 @@ python design.py --fasta examples/fasta.files.design/8q95_B_NA_A/8q95_B_NA_A_CDR
 ```
 python scripts/merge_chains.py --antigen examples/pdb.files.native/8ucd.pdb --output ./outputs --merge_ids A_B_C
 ```
+
+#### 示例九: 在推理前对抗原进行修剪以节省内存。
+* **重要!!** 必须先计算表位 (请参考 [表位计算](#表位计算))。如果有多个抗原链，请先合并（示例八）。
+* 抗体链 (H/L) 保持不变；只有指定的抗原链被修剪。
+```bash
+python scripts/trim_antigen.py --pdb outputs/8ucd_merge.pdb --fasta outputs/8ucd_merge.fasta --output outputs/8ucd_merge_trimmed.pdb --antigen-chain A --epitope 198 199 200 201 202 203 204 550 553 554 555 902 904 905 906 907 908 909 910 911
+```
+该工具仅保留表位残基及其两侧各5个残基，输出修剪后的 PDB 和 FASTA 文件，并打印用于设计的重新编号表位索引。
 
 # 🤝🏻License
 

@@ -6,18 +6,23 @@ from .registry import Registry
 from .file import jload, jdump, get_tmp_dpath, download_file
 from .env import seed_all_rng, setup_logger, setup
 from .diff_util import ss2ptr, ptr2ss, so3_scale, intp_prob_mat_dsct, intp_trsl_mat, intp_rota_tns, IsotropicGaussianSO3, IGSO3Buffer, rota2quat, replace_with_mask, calc_trsl_vec
+from .openmm_relax import OpenMM_relax
 
 # Relax the input pdb file
 def Rosetta_relax(pdb_file):
     import os
-    import pyrosetta
-    pyrosetta.init()
-    from pyrosetta.rosetta.core.select import residue_selector as selections
-    from pyrosetta import pose_from_pdb, create_score_function
-    from pyrosetta.rosetta.core.pack.task import TaskFactory, operation
-    from pyrosetta.rosetta.core.select.movemap import MoveMapFactory, move_map_action
-    from pyrosetta.rosetta.protocols.minimization_packing import PackRotamersMover
-    from pyrosetta.rosetta.protocols.relax import FastRelax
+    try:
+        import pyrosetta
+        pyrosetta.init()
+        from pyrosetta.rosetta.core.select import residue_selector as selections
+        from pyrosetta import pose_from_pdb, create_score_function
+        from pyrosetta.rosetta.core.pack.task import TaskFactory, operation
+        from pyrosetta.rosetta.core.select.movemap import MoveMapFactory, move_map_action
+        from pyrosetta.rosetta.protocols.minimization_packing import PackRotamersMover
+        from pyrosetta.rosetta.protocols.relax import FastRelax
+    except ImportError:
+        print("❌ PyRosetta not found. Please install via `pip install pyrosetta-installer` and setup, or use --relax_open for OpenMM.")
+        return
 
     print(f'Rosetta processing {pdb_file} for Relax')
 

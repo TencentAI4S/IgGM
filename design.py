@@ -72,6 +72,16 @@ def parse_args():
         help='relax structures after design',
     )
     parser.add_argument(
+        '--relax_open', '-r_open',
+        action='store_true',
+        help='relax structures after design using OpenMM',
+    )
+    # Restoration arguments
+    parser.add_argument('--restore_merged', type=str, default=None, help='Path to merged antigen PDB (used for alignment)')
+    parser.add_argument('--restore_unmerged', type=str, default=None, help='Path to original unmerged antigen PDB')
+    parser.add_argument('--restore_IDs', type=str, default=None, help='Chain IDs in original PDB to restore (e.g., A_B_C)')
+    parser.add_argument('--keep_trimmed', action='store_true', help='Keep trimmed sequences in restored output')
+    parser.add_argument(
         '--max_antigen_size', '-mas',
         type=int,
         default=2000,
@@ -201,14 +211,137 @@ def predict(args):
         if os.path.exists(task["output"]):
             print(f'{task["output"]} exists or has been executed by other process')
             continue
-        designer.infer_pdb(task["chains"], filename=task["output"], chunk_size=chunk_size, relax=args.relax,  temperature=temperature, task=args.run_task)
+        designer.infer_pdb(task["chains"], filename=task["output"], chunk_size=chunk_size, relax=args.relax, relax_open=args.relax_open, temperature=temperature, task=args.run_task)
 
 
 def main():
     args = parse_args()
     setup(True)
+    # Logic change: If restoration is requested, we disable generation-time relaxation
+    # and perform it AFTER restoration on the full complex.
+    do_restore = True if (args.restore_merged and args.restore_unmerged and args.restore_IDs) else False
+    
+    saved_relax = args.relax
+    saved_relax_open = args.relax_open
+    
+    if do_restore:
+        print("[Design] Restoration requested: Deferring relaxation until after restoration.")
+        args.relax = False
+        args.relax_open = False
+
     predict(args)
 
+
+    
+    # Post-inference restoration
+    if args.restore_merged and args.restore_unmerged and args.restore_IDs:
+        try:
+            print("[Restore] Starting antigen restoration...")
+            import subprocess
+            import os
+            import sys
+            
+            # Identify output files from the previous step
+            output_dir = os.path.dirname(args.output) if args.output.endswith('.pdb') else args.output
+            if not output_dir: output_dir = '.'
+            
+            # Derive base name from input FASTA
+            input_base = os.path.basename(args.fasta).replace('.fasta', '')
+            base_name = input_base
+            
+            for i in range(args.num_samples):
+                # Standard naming convention: {output_dir}/{input_base}_{i}.pdb
+                designed_pdb = f"{output_dir}/{base_name}_{i}.pdb"
+                
+                if not os.path.exists(designed_pdb):
+                     # Fallback check
+                     designed_pdb = f"{args.output}_{i}.pdb"
+                
+                if os.path.exists(designed_pdb):
+                    restored_pdb = designed_pdb.replace('.pdb', '_restored.pdb')
+                    
+                    cmd = [
+                        sys.executable,
+                        f"{os.path.dirname(os.path.abspath(__file__))}/scripts/restore_antigen.py",
+                        "--designed-pdb", designed_pdb,
+                        "--merged-pdb", args.restore_merged,
+                        "--original-pdb", args.restore_unmerged,
+                        "--restore-ids", args.restore_IDs,
+                        "--output", restored_pdb
+                    ]
+                    
+                    print(f"[Restore] Running: {' '.join(cmd)}")
+                    subprocess.check_call(cmd)
+                    
+                    # Perform Deferred Relaxation on Restricted PDB
+                    if do_restore and (saved_relax or saved_relax_open):
+                        print(f"[Restore] Relaxing restored structure: {restored_pdb}")
+                        from IgGM.utils import OpenMM_relax, Rosetta_relax
+                        
+                        if saved_relax_open:
+                            try:
+                                print(f"[Restore] Running OpenMM Relax on {restored_pdb}...")
+                                OpenMM_relax(restored_pdb)
+                                
+                                # OpenMM renames chains (A, B, C...). Restore original IDs from pre-relaxed file.
+                                # The pre-relaxed file is 'restored_pdb' before overwrite, but we overwrote it.
+                                # However, we know the chains we INTENDED: args.restore_IDs split + H + L.
+                                # Actually, easier: Read the PDB *before* relax? No, it's overwritten.
+                                # Better: OpenMM_relax could take a map? 
+                                # Best: Just renumb/rename based on the known order.
+                                # Verify order: Original Chains (A, B, C...) then Antibody (H, L).
+                                # OpenMM output: A, B, C, D, E.
+                                # Mapping: A->A, B->B, C->C, D->H, E->L.
+                                
+                                print(f"[Restore] Restoring chain IDs after OpenMM relaxation...")
+                                restored_ids = args.restore_IDs.split('_') # e.g. ['A', 'B', 'C']
+                                ab_ids = ['H', 'L'] # Standard IgGM output
+                                expected_order = restored_ids + ab_ids
+                                
+                                from Bio.PDB import PDBParser, PDBIO
+                                parser = PDBParser(QUIET=True)
+                                st = parser.get_structure("relaxed", restored_pdb)
+                                
+                                model = st[0]
+                                chains = list(model.get_chains())
+                                
+                                if len(chains) == len(expected_order):
+                                    for i, chain in enumerate(chains):
+                                        new_id = expected_order[i]
+                                        print(f"      Renaming chain {chain.id} -> {new_id}")
+                                        chain.id = new_id
+                                        
+                                    io = PDBIO()
+                                    io.set_structure(st)
+                                    io.save(restored_pdb)
+                                    print(f"[Restore] Chain IDs restored in {restored_pdb}")
+                                else:
+                                    print(f"      ⚠️ Warning: Chain count mismatch (Found {len(chains)}, Expected {len(expected_order)}). Skipping rename.")
+                                    
+                            except Exception as e:
+                                print(f"[Restore] OpenMM Relax/Rename failed: {e}")
+                                
+                        if saved_relax:
+                            try:
+                                print(f"[Restore] Running Rosetta Relax on {restored_pdb}...")
+                                # Rosetta_relax usually overwrites or creates a numbered suffix? 
+                                # IgGM.utils.Rosetta_relax implementation:
+                                # def Rosetta_relax(pdb_file): ... tries to relax and overwrite/save.
+                                Rosetta_relax(restored_pdb)
+                            except Exception as e:
+                                print(f"[Restore] Rosetta Relax failed: {e}")
+                    
+                    # Delete trimmed output if not keeping
+                    if not args.keep_trimmed:
+                        print(f"[Restore] Deleting trimmed output: {designed_pdb}")
+                        os.remove(designed_pdb)
+                        # Also remove fasta if exists
+                        designed_fasta = designed_pdb.replace('.pdb', '.fasta')
+                        if os.path.exists(designed_fasta):
+                            os.remove(designed_fasta)
+                            
+        except Exception as e:
+            print(f"[Restore] Error during restoration: {e}")
 
 if __name__ == '__main__':
     main()

@@ -101,7 +101,7 @@ class AbDesigner(BaseDesigner):
         outputs = self.forward(inputs, *args, **kwargs)
         return inputs, outputs
 
-    def infer_pdb(self, chains, filename, relax=False, task='design', *args, **kwargs):
+    def infer_pdb(self, chains, filename, relax=False, relax_open=False, task='design', *args, **kwargs):
         inputs, outputs = self.infer(chains, task, *args, **kwargs)
         complex_id = inputs["base"]["complex_id"]
         raw_seqs = {}
@@ -110,8 +110,8 @@ class AbDesigner(BaseDesigner):
             raw_seqs[chain_id] = raw_seq
 
         self._output_to_fasta(inputs, outputs, filename[:-4] + ".fasta")
-        if task == 'design' or task == 'fr_design':
-            self._output_to_pdb(inputs, outputs, filename, relax=relax)
+        if task == 'design' or task == 'fr_design' or task == 'affinity_maturation':
+            self._output_to_pdb(inputs, outputs, filename, relax=relax, relax_open=relax_open)
 
     def __sample_cm_ss2ss(self, prot_data_curr, idx_step, inputs_addi, chunk_size=None, temperature=1.0):
         """Sample amino-acid sequences & backbone structures w/ CM."""

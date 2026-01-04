@@ -13,7 +13,7 @@ from IgGM.protein.data_transform import get_asym_ids
 from IgGM.protein.parser import PdbParser
 from IgGM.protein.prot_constants import RESD_NAMES_1C, N_ATOMS_PER_RESD
 from IgGM.protein.utils import init_qta_params
-from IgGM.utils import calc_trsl_vec, get_tmp_dpath, Rosetta_relax
+from IgGM.utils import calc_trsl_vec, get_tmp_dpath, Rosetta_relax, OpenMM_relax
 
 
 class BaseDesigner(BaseModel):
@@ -214,7 +214,7 @@ class BaseDesigner(BaseModel):
         export_fasta(sequences, ids=ids, output=filename)
 
     @staticmethod
-    def _output_to_pdb(inputs, outputs, filename, relax=False):
+    def _output_to_pdb(inputs, outputs, filename, relax=False, relax_open=False):
         """Build a dict of protein structure data."""
         pred_info = 'REMARK 250 Structure predicted by IgGM\n'
         ligand_id = inputs["base"]["ligand_id"]
@@ -264,12 +264,19 @@ class BaseDesigner(BaseModel):
         PdbParser.save_multimer(prot_data, filename, pred_info=pred_info)
         # remove the tmp directory tmp_path
         shutil.rmtree(tmp_path)
-        if relax:
-            try:
-                Rosetta_relax(filename)
-            except Exception as e:
-                logging.error(f'Error during Rosetta relaxation: {e}')
-                logging.info('Relaxation failed, skipping...')
+        if relax or relax_open:
+            if relax:
+                try:
+                    Rosetta_relax(filename)
+                except Exception as e:
+                    logging.error(f'Error during Rosetta relaxation: {e}')
+                    logging.info('Relaxation failed, skipping...')
+            elif relax_open:
+                try:
+                    OpenMM_relax(filename)
+                except Exception as e:
+                    logging.error(f'Error during OpenMM relaxation: {e}')
+                    logging.info('Relaxation failed, skipping...')
 
         logging.info(f'PDB file generated: {filename}')
 

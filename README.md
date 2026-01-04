@@ -59,6 +59,7 @@ If you need to use relax for the output, please install the following version of
 ```shell
 pip install https://west.rosettacommons.org/pyrosetta/release/release/PyRosetta4.Release.python310.ubuntu.wheel/pyrosetta-2025.37+release.df75a9c48e-cp310-cp310-linux_x86_64.whl
 ```
+Alternatively, you can use OpenMM for relaxation, which is included in the environment.yaml. Use `--relax_open` argument.
 
 3. Download the model (Optional, pretrained weights will be downloaded automatically when the code is run)
     * [Zenodo](https://zenodo.org/records/16909543)
@@ -78,6 +79,7 @@ You can use a fasta file as the sequence input and a pdb file as the antigen inp
 
 * **Optional:**
   * For all commands, you can use PyRosetta to relax the output by adding `--relax` or `-r`. This option will also add side-chain atoms.
+  * Alternatively, use `--relax_open` or `-r_open` to use OpenMM for structure relaxation (no PyRosetta license required).
   * For all commands, you can specify the maximum truncation length for the antigen to 384 to avoid memory issues by adding `--max_antigen_size 384` or `-mas 384`.
 
 For subsequent processing, you need to prepare a fasta file and a pdb file. Your fasta file should have the following structure, which you can refer to in the `examples` folder.
@@ -92,6 +94,7 @@ NLCPFDEVFNATRFASVYAWNRKRISNCVADYSVLYNFAPFFAFKCYGVSPTKLNDLCFTNVYADSFVIRGNEVSQIAPG
 ```
 * 'X' indicates the region to be designed.
 * To obtain the epitope of the antigen, you can use the following command:
+<a id="epitope-calculation"></a>
 
 ```
 python design.py --fasta examples/fasta.files.native/8iv5_A_B_G.fasta --antigen examples/pdb.files.native/8iv5_A_B_G.pdb --cal_epitope
@@ -223,6 +226,32 @@ For a completely new antigen, you can specify epitopes to design antibodies that
 ```
 python scripts/merge_chains.py --antigen examples/pdb.files.native/8ucd.pdb --output ./outputs --merge_ids A_B_C
 ```
+
+#### Example 9: Trimming an antigen to save memory before inference.
+* **Important!!** Epitope must be calculated first (see [Epitope Calculation](#epitope-calculation)). If there are multiple antigen chains, merge first (Example 8).
+* The antibody chains (H/L) are preserved unchanged; only the specified antigen chain is trimmed.
+```bash
+python scripts/trim_antigen.py --pdb outputs/8ucd_merge.pdb --fasta outputs/8ucd_merge.fasta --output outputs/8ucd_merge_trimmed.pdb --antigen-chain A --epitope 198 199 200 201 202 203 204 --keep-radius 10.0
+```
+* **--keep-radius**: (Default 10.0Å) Includes residues within X Ångstroms of the epitope's center of mass, ensuring the structural context is preserved even if residues are discontinuous in sequence. Set to 0 to disable.
+* This tool outputs both trimmed PDB and FASTA, and prints the new renumbered epitope indices for use in design.
+
+#### Example 10: Running inference with a trimmed antigen and restoring to the original.
+* This is the recommended workflow for large antigens: Design against a trimmed patch, then automatically restore the full antigen context and relax the final complex.
+```bash
+python design.py \
+    --fasta outputs/8ucd_merge_trimmed.fasta \
+    --antigen outputs/8ucd_merge_trimmed_noAb.pdb \
+    --epitope 6 7 8 9 ... (indices from trim output) \
+    --restore_merged outputs/8ucd_merge.pdb \
+    --restore_unmerged examples/pdb.files.native/8ucd.pdb \
+    --restore_IDs A_B_C \
+    --relax_open
+```
+* **--restore_merged**: The PDB used for trimming (provides the reference frame).
+* **--restore_unmerged**: The original full PDB (provides the exact chains to output).
+* **--restore_IDs**: The chain IDs from the original PDB to include in the final output.
+* **--relax_open**: Performs OpenMM relaxation *after* restoration, ensuring the antibody-antigen interface is energy-minimized in the context of the full antigen.
 
 # 🤝🏻License
 

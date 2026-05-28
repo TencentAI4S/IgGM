@@ -54,6 +54,8 @@ def main():
 
     for chn_id in antibody_ids:
         aa_seq, atom_cord, atom_cmsk, _, _ = PdbParser.load(pdb_file, chain_id=chn_id)
+        if aa_seq is None:
+            continue
         chains[chn_id] = {
             'seq': aa_seq,
             'cord': atom_cord,
@@ -67,6 +69,8 @@ def main():
     antigen_cmsk = []
     for chn_id in merge_ids:
         aa_seq, atom_cord, atom_cmsk, _, _ = PdbParser.load(pdb_file, chain_id=chn_id)
+        if aa_seq is None:
+            continue
         antigen_seq += aa_seq
         antigen_cord.append(atom_cord)
         antigen_cmsk.append(atom_cmsk)

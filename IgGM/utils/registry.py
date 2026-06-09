@@ -27,7 +27,7 @@ def get_registry(name):
 
 class Registry(dict):
     """
-    registry helper，
+    registry helper,
     Eg. creeting a registry:
         some_registry = Registry({'default': default_module})
 

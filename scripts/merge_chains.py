@@ -5,13 +5,15 @@ import os
 import sys
 from collections import OrderedDict
 
+# Finds the root directory (one level up from this script's folder)
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if ROOT_DIR not in sys.path:
+    sys.path.append(ROOT_DIR)
+
 import torch
 import tqdm
 
 from IgGM.protein import export_fasta
-
-sys.path.append('.')
-
 from IgGM.protein.parser import parse_fasta, PdbParser
 
 
